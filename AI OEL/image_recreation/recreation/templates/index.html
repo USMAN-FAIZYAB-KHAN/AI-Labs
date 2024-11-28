@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js" defer></script>
+   <title>Image Recreation</title>
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+   </style>
+</head>
+
+<body>
+
+   <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar"
+      type="button"
+      class="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+      <span class="sr-only">Open sidebar</span>
+      <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+         xmlns="http://www.w3.org/2000/svg">
+         <path clip-rule="evenodd" fill-rule="evenodd"
+            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
+         </path>
+      </svg>
+   </button>
+   <aside id="logo-sidebar"
+      class="fixed top-0 left-0 z-40 w-96 h-screen transition-transform -translate-x-full sm:translate-x-0"
+      aria-label="Sidebar">
+      <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 w-full">
+         <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 w-full">
+            <!-- Upload section -->
+            <div class="flex items-center justify-center mx-auto mt-5 h-48 w-48">
+               <label for="dropzone-file"
+                  class="flex flex-col items-center justify-center w-full border-2 border-gray-300 border-dashed rounded-sm cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                  <div class="flex flex-col items-center justify-center w-48 h-48" id="upload-placeholder">
+                     <svg class="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                           d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                     </svg>
+                     <p class="mb-2 text-sm text-gray-500 dark:text-gray-400 font-semibold">Click to upload</p>
+                     <p class="text-xs text-gray-500 dark:text-gray-400">PNG (128x128px)</p>
+                  </div>
+                  <img id="preview-image" class="hidden w-48 h-48 object-cover p-1" alt="Preview Image" />
+                  <input id="dropzone-file" type="file" class="hidden" accept="image/png"
+                     onchange="previewImage(event)" />
+               </label>
+            </div>
+
+            <!-- Centering the button with space reserved -->
+            <div class="flex justify-center mt-4 min-h-[60px]"> <!-- Ensure enough space for the button -->
+               <button type="button" id="add-image" onclick="saveImage()"
+                  class="hidden text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center my-2">
+                  Add To Media
+               </button>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-y-7 justify-items-center" id="media">
+               {% for image in media_images %}
+               <img src="{{ image.image.url }}" alt="{{ image }}"
+                  class="w-32 h-32 object-cover rounded-sm border-2 border-purple-700 transition-transform duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-xl"
+                  onclick="displayInOriginalImage(this.src)">
+               {% endfor %}
+               {% for image in static_images %}
+               <img src="{% static image %}" alt="{{ image }}"
+                  class="w-32 h-32 object-cover rounded-sm border-2 border-purple-700 transition-transform duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-xl"
+                  onclick="displayInOriginalImage(this.src)">
+               {% endfor %}
+            </div>
+         </div>
+      </div>
+   </aside>
+
+
+   <!-- Display Area for Selected Image -->
+   <div class="p-8 sm:ml-96 h-screen justify-center">
+      <div class="flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
+         <!-- Left Half: Table-like structure for Population Size, Mutation Rate, and Total Generations -->
+         <div class="w-1/2 p-6">
+            <div class="border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm">
+               <div class="p-2">
+                  <div class="space-y-4">
+                     <!-- Population Size -->
+                     <div class="flex justify-between">
+                        <span class="text font-semibold text-gray-700 dark:text-gray-300">Population Size</span>
+                        <span class="text text-gray-800 dark:text-gray-200">350</span>
+                     </div>
+                     <!-- Mutation Rate -->
+                     <div class="flex justify-between">
+                        <span class="text font-semibold text-gray-700 dark:text-gray-300">Mutation Rate</span>
+                        <span class="tex text-gray-800 dark:text-gray-200">0.0001</span>
+                     </div>
+                     <!-- Crossover Rate -->
+                     <div class="flex justify-between">
+                        <span class="text font-semibold text-gray-700 dark:text-gray-300">Crossover Rate</span>
+                        <span class="tex text-gray-800 dark:text-gray-200">0.9</span>
+                     </div>
+                     <!-- Total Generations -->
+                     <div class="flex justify-between">
+                        <span class="text font-semibold text-gray-700 dark:text-gray-300">Total Generations</span>
+                        <span class="text text-gray-800 dark:text-gray-200">2000</span>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <!-- Vertical Divider -->
+         <div class="border-l-2 border-gray-300 dark:border-gray-600 h-full"></div>
+
+         <!-- Right Half: Current Generation -->
+         <div class="w-1/2 p-4 flex items-center justify-center">
+            <span id="current-generation"
+               class="text-center w-32 text-4xl font-semibold text-gray-800 dark:text-gray-200 flex items-center justify-center">
+               Generation
+               <span id="generation-number" class="ml-2 w-6 text-center">0</span>
+            </span>
+         </div>
+      </div>
+
+
+
+
+      <div class="grid grid-cols-2 gap-8 pt-4">
+         <div class="grid grid-rows-[auto,1fr] h-64 sm:h-96 rounded bg-gray-50 dark:bg-gray-800 p-4">
+            <h2 class="text-center text-2xl font-extrabold text-white bg-purple-600 p-2 rounded">
+               Original Image
+            </h2>
+            <div id="display-area-original"
+               class="p-4 rounded-lg shadow-md flex items-center justify-center bg-gray-50 h-80 dark:bg-gray-800">
+               <!-- Placeholder text shown initially -->
+               <div id="placeholder-original" class="text-gray-500 text-center">Select an image to display it here</div>
+               <!-- Image tag for the original image, hidden initially -->
+               <img id="original-img" src="" alt="Original Image" class="h-64 w-64 object-contain hidden" />
+            </div>
+         </div>
+
+         <div class="grid grid-rows-[auto,1fr] h-64 sm:h-96 rounded bg-gray-50 dark:bg-gray-800 p-4">
+            <h2 class="text-center text-2xl font-extrabold text-white bg-purple-600 p-2 rounded">
+               Recreated Image
+            </h2>
+            <div id="display-area-recreated"
+               class="p-4 rounded-lg shadow-md flex items-center justify-center bg-gray-50 h-80 dark:bg-gray-800">
+               <!-- Placeholder text shown initially -->
+               <div id="placeholder-recreated" class="text-gray-500 text-center">Recreated image will appear here</div>
+               <!-- Image tag for the recreated image, hidden initially -->
+               <img src="" alt="Recreated Image" class="max-h-full max-w-full object-contain hidden" id="recreated-img"
+                  width="256px" height="256px" />
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div id="progress">Waiting for progress updates...</div>
+
+   <script>
+      let ws;
+
+      function previewImage(event) {
+         const file = event.target.files[0];
+         if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+               const previewImage = document.getElementById("preview-image");
+
+               // Set the image source to the uploaded file
+               previewImage.src = e.target.result;
+
+               // Show the image preview
+               previewImage.classList.remove("hidden");
+               document.getElementById("upload-placeholder").classList.add("hidden");
+            };
+            reader.readAsDataURL(file);
+            document.getElementById("add-image").classList.remove("hidden");
+         }
+      }
+
+      function saveImage() {
+         const fileInput = document.getElementById("dropzone-file");
+         const previewImage = document.getElementById("preview-image");
+         const formData = new FormData();
+
+         if (fileInput.files.length === 0) {
+            alert("Please select an image first.");
+            return;
+         }
+
+         formData.append("image", fileInput.files[0]);
+
+         // Send the image to the server via AJAX
+         fetch("/upload_image/", {
+            method: "POST",
+            headers: {
+               "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: formData
+         })
+            .then(response => response.json())
+            .then(data => {
+               if (data.success) {
+                  location.reload();
+               } else {
+                  alert("Error saving the image.");
+               }
+            })
+            .catch(error => {
+               console.error("Error:", error);
+               alert("Error sending the image.");
+            });
+      }
+
+      function displayInOriginalImage(imageSrc) {
+         // Close any existing WebSocket connection
+         if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close();
+         }
+
+         // Open a new WebSocket connection
+         ws = new WebSocket('ws://localhost:8000/ws/progress/');
+
+         ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            generationElement = document.getElementById('generation-number');
+            generationElement.textContent = data.generation;
+            recreatedImage = document.getElementById('recreated-img');
+            recreatedImage.src = `data:image/png;base64,${data.image_data}`;
+            recreatedImage.classList.remove('hidden');
+            document.getElementById('placeholder-recreated').classList.add('hidden');
+            if (data.final) {
+               alert('Recreation complete!');
+            }
+         };
+
+         ws.onclose = function (event) {
+            if (event.wasClean) {
+               console.log(`Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+               console.error('Connection died');
+            }
+         };
+
+         const originalImage = document.getElementById("original-img");
+         const placeholderOriginal = document.getElementById("placeholder-original");
+
+         // Set the image source to the given URL
+         originalImage.src = imageSrc;
+         originalImage.classList.remove("hidden");
+         placeholderOriginal.classList.add("hidden");
+         document.getElementById('generation-number').textContent = 0;
+
+         // Create a canvas element to draw the image
+         const canvas = document.createElement("canvas");
+         const ctx = canvas.getContext("2d");
+
+         // Wait for the image to load
+         originalImage.onload = function () {
+            // Set the canvas size to match the image
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+
+            // Draw the image on the canvas
+            ctx.drawImage(originalImage, 0, 0, originalImage.width, originalImage.height);
+
+            // Convert the image to base64
+            const base64Image = canvas.toDataURL("image/png").split(",")[1]; // Get base64 string without data URL prefix
+
+            ws.onopen = function (event) {
+               ws.send(JSON.stringify({ image_data: base64Image }));
+            };
+         };
+      }
+
+
+
+   </script>
+</body>
+
+</html>
